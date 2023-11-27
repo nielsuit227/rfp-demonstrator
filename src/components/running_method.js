@@ -1,46 +1,17 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { CircularProgress, Typography, Box } from "@mui/material";
 import { toast } from "react-toastify";
 
 const RunningMethod = ({ isShown, onHide }) => {
-  const [progress, setProgress] = useState(0);
   const [startTime, setStartTime] = useState(null);
   const totalDuration = 45; // Total duration in seconds
-
-  const updateProgress = useCallback(() => {
-    if (startTime) {
-      const elapsedTime = (new Date().getTime() - startTime.getTime()) / 1000; // Time in seconds
-      const updatedProgress = Math.min(
-        100,
-        (elapsedTime / totalDuration) * 100
-      );
-      setProgress(updatedProgress);
-
-      if (updatedProgress >= 100) {
-        toast.success("Run exp.3482-31 finished successfully.");
-        onHide(); // Call the hide callback once completed
-      }
-    }
-  }, [startTime, onHide]);
 
   useEffect(() => {
     if (isShown) {
       toast.success("Run exp.3482-31 started.");
-      const newStartTime = new Date();
-      setStartTime(newStartTime);
-      setProgress(0); // Reset progress when starting
+      setStartTime(new Date());
     }
   }, [isShown]);
-
-  useEffect(() => {
-    let interval;
-    if (isShown && startTime) {
-      interval = setInterval(updateProgress, 1000); // Update progress every second
-    }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isShown, startTime, updateProgress]);
 
   const remainingSeconds = startTime
     ? Math.max(
@@ -49,6 +20,13 @@ const RunningMethod = ({ isShown, onHide }) => {
           Math.floor((new Date().getTime() - startTime.getTime()) / 1000)
       )
     : totalDuration;
+  const progress = Math.min(
+    100,
+    ((totalDuration - remainingSeconds) * 100) / totalDuration
+  );
+  if (progress > 99) {
+    onHide();
+  }
 
   return (
     isShown && (
@@ -77,4 +55,4 @@ const RunningMethod = ({ isShown, onHide }) => {
   );
 };
 
-export default RunningMethod;
+export default React.memo(RunningMethod);

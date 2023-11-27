@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -29,11 +29,20 @@ const colors = ["#e7edf2", "#0f4879", "#01070c"];
 const chartOptions = {
   maintainAspectRatio: false,
   aspectRatio: 1.5,
+  animation: { duration: 0 },
+  elements: {
+    line: {
+      tension: 0.4,
+    },
+  },
   scales: {
     x: {
       title: {
         display: true,
         text: "Time",
+      },
+      ticks: {
+        maxTicksLimit: 10,
       },
     },
     y: {
@@ -57,45 +66,55 @@ function Device() {
   const [showRunningMethod, setShowRunningMethod] = useState(false);
   const setOfflineRef = useRef();
 
-  const handleWebSocketMessage = (message) => {
-    try {
-      const messageData = JSON.parse(message.data);
-      // time and either temperature or humidity are required
-      if (!deviceState) {
-        setDeviceState(true);
-        toast.success("Instrument XYZ123 reconnected!");
-      }
-      if (setOfflineRef.current) {
-        clearTimeout(setOfflineRef.current);
-      }
-      setOfflineRef.current = setTimeout(() => {
-        setDeviceState(false);
-        toast.error("Instrument XYZ123 lost connection.");
-      }, 2000);
+  const handleWebSocketMessage = useCallback(
+    (message) => {
+      try {
+        const messageData = JSON.parse(message.data);
+        // time and either temperature or humidity are required
+        if (deviceState === false && !setOfflineRef.current) {
+          setDeviceState(true);
+          toast.success("Instrument XYZ123 reconnected!");
+        }
+        if (setOfflineRef.current) {
+          clearTimeout(setOfflineRef.current);
+        }
+        setOfflineRef.current = setTimeout(() => {
+          setDeviceState(false);
+          toast.error("Instrument XYZ123 lost connection.");
+        }, 2000);
 
-      // time and either temperature or humidity are required
-      if (messageData.deviceState) {
-        setShowRunningMethod(true);
+        // time and either temperature or humidity are required
+        if (messageData.deviceState) {
+          setShowRunningMethod(true);
+        }
+        if (messageData.accelerometerX) {
+          setTimestamps((x) => [...x.slice(-100), messageData.timestamp]);
+          setAccelerometerX((x) => [
+            ...x.slice(-100),
+            messageData.accelerometerX,
+          ]);
+          setAccelerometerY((x) => [
+            ...x.slice(-100),
+            messageData.accelerometerY,
+          ]);
+          setAccelerometerZ((x) => [
+            ...x.slice(-100),
+            messageData.accelerometerZ,
+          ]);
+        }
+      } catch (err) {
+        console.error(err);
       }
-      if (messageData.accelerometerX) {
-        setTimestamps((x) => [...x.slice(-100), messageData.timestamp]);
-        setAccelerometerX((x) => [
-          ...x.slice(-100),
-          messageData.accelerometerX,
-        ]);
-        setAccelerometerY((x) => [
-          ...x.slice(-100),
-          messageData.accelerometerY,
-        ]);
-        setAccelerometerZ((x) => [
-          ...x.slice(-100),
-          messageData.accelerometerZ,
-        ]);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
+    },
+    [
+      deviceState,
+      setAccelerometerX,
+      setAccelerometerY,
+      setAccelerometerZ,
+      setDeviceState,
+      setShowRunningMethod,
+    ]
+  );
   function formatTime(dateString) {
     const date = new Date(dateString);
     return date.toLocaleTimeString("en-US", {
@@ -114,16 +133,19 @@ function Device() {
         label: "AccelerometerX",
         data: accX,
         borderColor: colors[0],
+        pointRadius: 0,
       },
       {
         label: "AccelerometerY",
         data: accY,
         borderColor: colors[1],
+        pointRadius: 0,
       },
       {
         label: "AccelerometerZ",
         data: accZ,
         borderColor: colors[2],
+        pointRadius: 0,
       },
     ],
   };

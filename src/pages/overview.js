@@ -26,7 +26,7 @@ function App() {
   const handleWebSocketMessage = (message) => {
     try {
       // time and either temperature or humidity are required
-      if (!deviceState) {
+      if (deviceState === false && !setOfflineRef.current) {
         setDeviceState(true);
         toast.success("Instrument XYZ123 reconnected!");
       }
