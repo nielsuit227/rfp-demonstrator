@@ -4,8 +4,7 @@ const WebSocket = require("ws");
 const path = require("path");
 const EventHubReader = require("./scripts/event-hub-reader.js");
 
-const iotHubConnectionString =
-  "HostName=hamiltonrfpdemo.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=9NWehJEShlO/SGjCzkCp3pIzr5MxZ20jKAIoTGCKGqc=";
+const iotHubConnectionString = "TODO: FILL IN";
 const eventHubConsumerGroup = "$Default";
 
 // Redirect requests to the public subdirectory to the root
@@ -40,7 +39,7 @@ wss.broadcast = (data) => {
   });
 };
 
-server.listen(process.env.PORT || "3001", () => {
+server.listen(process.env.PORT || "80", () => {
   console.log("Listening on %d.", server.address().port);
 });
 

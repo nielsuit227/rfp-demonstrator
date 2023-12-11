@@ -16,5 +16,7 @@ COPY . .
 # Build the application
 RUN npm run build
 
-# The command to run your app using Node.js
-CMD ["node", "server.js"]
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+
